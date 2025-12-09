@@ -38,7 +38,7 @@ const UNIT = 25;
 const Colors = {
   Background: "black",
   Grid: "rgba(255,255,255,.1)",
-  Snake: "green",
+  Snake: { r: 0, g: 100, b: 0 },
   SnakeOutline: "rgba(255,255,255,.25)",
   Food: "red",
   OverlayBackground: "rgba(122, 122, 122, .5)",
@@ -64,16 +64,29 @@ class SnakeGame {
   private input: Input;
   private speedInMs: number = 200;
   private gameState: GameState = "NotStarted";
+  private sounds = {
+    gameStart: new Audio("/assets/sound/game-start.mp3"),
+    explode: new Audio("/assets/sound/explode.mp3"),
+    gameOver: new Audio("/assets/sound/game-over.mp3"),
+    swoosh: new Audio("/assets/sound/swoosh.mp3"),
+    eat: new Audio("/assets/sound/eat.mp3"),
+  };
+  private images = {
+    food: new Image(),
+  };
+  private level: number = 1;
+  private score: number = 0;
 
   constructor(canvasId: string) {
     const canvas = document.getElementById(
-      canvasId,
+      canvasId
     ) as HTMLCanvasElement | null;
     if (!canvas) throw Error(`Could not find canvas with id: ${canvasId}`);
     const ctx = canvas.getContext("2d");
     if (!ctx) throw Error("Could not initialize 2D context");
     this.ctx = ctx;
     this.input = new Input();
+    this.loadAssets();
   }
 
   private loop = (timestampInMs: number) => {
@@ -91,16 +104,34 @@ class SnakeGame {
   };
 
   private handleUserInput = () => {
-    if (this.input.isKeyPressed("Space") && this.gameState === "NotStarted")
+    if (this.input.isKeyPressed("Space") && this.gameState === "NotStarted") {
+      this.sounds.gameStart.play();
       this.gameState = "Started";
-    else if (this.input.isKeyPressed("ArrowUp") && this.direction !== "down")
+    } else if (
+      this.input.isKeyPressed("ArrowUp") &&
+      this.direction !== "down"
+    ) {
+      this.sounds.swoosh.play();
       this.direction = "up";
-    else if (this.input.isKeyPressed("ArrowDown") && this.direction !== "up")
+    } else if (
+      this.input.isKeyPressed("ArrowDown") &&
+      this.direction !== "up"
+    ) {
+      this.sounds.swoosh.play();
       this.direction = "down";
-    else if (this.input.isKeyPressed("ArrowLeft") && this.direction !== "right")
+    } else if (
+      this.input.isKeyPressed("ArrowLeft") &&
+      this.direction !== "right"
+    ) {
+      this.sounds.swoosh.play();
       this.direction = "left";
-    else if (this.input.isKeyPressed("ArrowRight") && this.direction !== "left")
+    } else if (
+      this.input.isKeyPressed("ArrowRight") &&
+      this.direction !== "left"
+    ) {
+      this.sounds.swoosh.play();
       this.direction = "right";
+    }
   };
 
   private update = (deltaInMs: number) => {
@@ -126,23 +157,48 @@ class SnakeGame {
         newHead.x += UNIT;
         break;
     }
-    if (
-      newHead.x < 0 ||
-      newHead.x > this.ctx.canvas.width - UNIT ||
-      newHead.y < 0 ||
-      newHead.y > this.ctx.canvas.height - UNIT
-    ) {
+    if (this.isGameOver(newHead)) {
       this.gameState = "Over";
+      this.sounds.explode.play();
+      setTimeout(() => {
+        this.sounds.gameOver.play();
+      }, 500);
       return;
     }
+
     this.snake.unshift(newHead);
 
     if (newHead.x === this.food.x && newHead.y === this.food.y) {
-      this.addFood();
+      this.sounds.eat.play();
+      this.score++;
+      if (this.score % 5 === 0) {
+        this.level++;
+        this.speedInMs = Math.max(50, this.speedInMs - 20);
+      }
+      this.spawnFood();
       return;
     }
 
     this.snake.pop();
+  };
+
+  private isGameOver = (head: { x: number; y: number }): boolean => {
+    if (
+      head.x < 0 ||
+      head.x > this.ctx.canvas.width - UNIT ||
+      head.y < 0 ||
+      head.y > this.ctx.canvas.height - UNIT
+    ) {
+      return true;
+    }
+    if (
+      this.snake.some(
+        (snakePart) => snakePart.x === head.x && snakePart.y === head.y
+      )
+    ) {
+      return true;
+    }
+    return false;
   };
 
   private renderGrid = () => {
@@ -159,12 +215,23 @@ class SnakeGame {
         this.ctx.strokeRect(x * UNIT, y * UNIT, UNIT, UNIT);
       }
     }
+    this.ctx.fillStyle = "white";
+    this.ctx.font = "Bold 18px monospace";
+    this.ctx.textAlign = "right";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillText(
+      `Level : ${this.level} | Score: ${this.score}`,
+      this.ctx.canvas.width - 10,
+      15
+    );
   };
 
   private renderSnake = () => {
-    this.snake.forEach((snakePart) => {
+    this.snake.forEach((snakePart, index) => {
       // Draw the snake body
-      this.ctx.fillStyle = Colors.Snake;
+      this.ctx.fillStyle = `rgb(${Colors.Snake.r}, ${
+        Colors.Snake.g + index * 10
+      }, ${Colors.Snake.b})`;
       this.ctx.fillRect(snakePart.x, snakePart.y, UNIT, UNIT);
       // Draw the snake body outline
       this.ctx.strokeStyle = Colors.SnakeOutline;
@@ -189,20 +256,29 @@ class SnakeGame {
     this.ctx.fillText(
       message,
       this.ctx.canvas.width / 2,
-      this.ctx.canvas.height / 2,
+      this.ctx.canvas.height / 2
     );
   };
 
   private renderFood = () => {
-    this.ctx.fillStyle = Colors.Food;
-    this.ctx.fillRect(this.food.x, this.food.y, UNIT, UNIT);
+    // this.ctx.fillStyle = Colors.Food;
+    // this.ctx.fillRect(this.food.x, this.food.y, UNIT, UNIT);
+    this.ctx.drawImage(this.images.food, this.food.x, this.food.y, UNIT, UNIT);
   };
 
-  private addFood = () => {
-    this.food = {
-      x: getRandomIntInclusive(0, this.ctx.canvas.width / UNIT) * UNIT,
-      y: getRandomIntInclusive(0, this.ctx.canvas.height / UNIT) * UNIT,
+  private spawnFood = (): void => {
+    const spawnPosition = {
+      x: getRandomIntInclusive(0, this.ctx.canvas.width / UNIT - 1) * UNIT,
+      y: getRandomIntInclusive(0, this.ctx.canvas.height / UNIT - 1) * UNIT,
     };
+    // Ensure food is not spawned behind the snake
+    for (const snakePart of this.snake) {
+      if (snakePart.x === spawnPosition.x && snakePart.y === spawnPosition.y) {
+        return this.spawnFood();
+      }
+    }
+
+    this.food = { ...spawnPosition };
   };
 
   private render = () => {
@@ -210,6 +286,13 @@ class SnakeGame {
     this.renderFood();
     this.renderSnake();
     this.renderGameState();
+  };
+
+  private loadAssets = () => {
+    Object.values(this.sounds).forEach((sound) => {
+      sound.load();
+    });
+    this.images.food.src = "/assets/images/apple.svg";
   };
 
   start = () => {

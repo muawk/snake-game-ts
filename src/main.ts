@@ -12,6 +12,13 @@
  * 6. Add different kinds of food items
  */
 
+import appleImage from "./assets/images/apple.svg";
+import gameStartSound from "./assets/sound/game-start.mp3";
+import explodeSound from "./assets/sound/explode.mp3";
+import gameOverSound from "./assets/sound/game-over.mp3";
+import swooshSound from "./assets/sound/swoosh.mp3";
+import eatSound from "./assets/sound/eat.mp3";
+
 type Direction = "up" | "down" | "left" | "right";
 
 type GameState = "NotStarted" | "Started" | "Over";
@@ -65,11 +72,11 @@ class SnakeGame {
   private speedInMs: number = 200;
   private gameState: GameState = "NotStarted";
   private sounds = {
-    gameStart: new Audio("/assets/sound/game-start.mp3"),
-    explode: new Audio("/assets/sound/explode.mp3"),
-    gameOver: new Audio("/assets/sound/game-over.mp3"),
-    swoosh: new Audio("/assets/sound/swoosh.mp3"),
-    eat: new Audio("/assets/sound/eat.mp3"),
+    gameStart: new Audio(gameStartSound),
+    explode: new Audio(explodeSound),
+    gameOver: new Audio(gameOverSound),
+    swoosh: new Audio(swooshSound),
+    eat: new Audio(eatSound),
   };
   private images = {
     food: new Image(),
@@ -292,7 +299,7 @@ class SnakeGame {
     Object.values(this.sounds).forEach((sound) => {
       sound.load();
     });
-    this.images.food.src = "/assets/images/apple.svg";
+    this.images.food.src = appleImage;
   };
 
   start = () => {

@@ -1,1 +1,1 @@
-export { default as appleImage } from "./apple.svg";
+export { default as appleImage } from "./images/apple.svg";

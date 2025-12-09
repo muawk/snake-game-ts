@@ -1,12 +1,27 @@
 # Snake Game TypeScript (WIP)
-<img width="601" height="601" alt="image" src="https://github.com/user-attachments/assets/9ec5e354-fccf-48fb-96d0-1366ac226a12" />
 
+<img width="601" height="601" alt="image" src="https://github.com/user-attachments/assets/9ec5e354-fccf-48fb-96d0-1366ac226a12" />
 
 A classic Snake game implementation built with TypeScript and Canvas API. Navigate the snake to eat food and grow longer while avoiding collisions with walls and yourself.
 
 ## Overview
 
 This is a modern implementation of the timeless Snake arcade game. The player controls a snake that moves around a grid, eating food to grow longer and earn points. The game ends when the snake collides with the walls or itself.
+
+## Technical Specifications
+
+- **Canvas Size**: 600 × 600 px
+- **Unit Size**: 25 × 25 px per square
+- **Grid Dimensions**: 24 × 24 units (576 total squares)
+
+## Development Roadmap
+
+- [x] Press spacebar to start game
+- [x] Game over screen with restart functionality
+- [x] Score tracking with high score and offline storage
+- [x] Sound effects
+- [ ] Sprite animations for different actions
+- [ ] Different kinds of food items
 
 ## Features
 

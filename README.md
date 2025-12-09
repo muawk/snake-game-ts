@@ -1,5 +1,6 @@
 # Snake Game TypeScript (WIP)
-<img width="793" height="848" alt="Screenshot 2025-12-08 at 9 02 35 PM" src="https://github.com/user-attachments/assets/ed807700-0de0-4222-9b74-884487ff49f9" />
+<img width="601" height="601" alt="image" src="https://github.com/user-attachments/assets/9ec5e354-fccf-48fb-96d0-1366ac226a12" />
+
 
 A classic Snake game implementation built with TypeScript and Canvas API. Navigate the snake to eat food and grow longer while avoiding collisions with walls and yourself.
 

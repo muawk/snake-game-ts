@@ -1,4 +1,4 @@
-# Snake Game TypeScript (WIP)
+# Snake Game TypeScript
 
 <img width="601" height="601" alt="image" src="https://github.com/user-attachments/assets/9ec5e354-fccf-48fb-96d0-1366ac226a12" />
 
@@ -28,16 +28,18 @@ This is a modern implementation of the timeless Snake arcade game. The player co
 - **Classic Gameplay**: Traditional Snake mechanics with smooth controls
 - **TypeScript**: Fully typed implementation for better code quality and maintainability
 - **Canvas Rendering**: Smooth graphics using HTML5 Canvas API
-- **Score Tracking**: Keep track of your current score and high score (WIP)
+- **Score Tracking**: Keep track of your current score and level progression
 - **Responsive Controls**: Arrow keys for intuitive snake movement
 - **Game States**: Start, playing, and game over states with clear UI feedback
+- **Progressive Difficulty**: Game speed increases every 5 points earned
 
 ## How to Play
 
-1. Use **Arrow Keys** to control the snake's direction
-2. Eat the red food squares to grow and increase your score
-3. Avoid hitting the walls or the snake's own body
-4. Try to achieve the highest score possible
+1. Press **Spacebar** to start the game
+2. Use **Arrow Keys** to control the snake's direction
+3. Eat the food squares to grow and increase your score
+4. Avoid hitting the walls or the snake's own body
+5. Try to reach the highest level possible
 
 ## Getting Started
 
@@ -62,7 +64,7 @@ npm run dev
 
 This will start a local development server and open the game in your browser.
 
-### Building for Production (WIP)
+### Building for Production
 
 ```bash
 npm run build
@@ -84,10 +86,11 @@ npm run build
 
 ## Game Rules
 
-- The snake starts with a length of 3 units
+- The snake starts with a length of 4 units
 - Each food eaten increases the snake's length by 1
-- The game board is 20x20 grid units
-- Snake movement speed increases slightly as the game progresses
+- The game board is 24 × 24 grid units
+- Snake movement speed increases every 5 points (level increases)
+- Minimum speed is capped to maintain playability
 - Game ends on collision with walls or the snake's body
 
 ## Future Enhancements
@@ -96,8 +99,8 @@ npm run build
 - Obstacles on the game board
 - Leaderboard system
 - Mobile touch controls
-- Sound effects and background music
 - Pause/Resume functionality
+- Power-ups and special items
 
 ## License
 

@@ -6,8 +6,8 @@ import {
   gameOverSound,
   swooshSound,
   eatSound,
-} from "./assets/sounds";
-import { appleImage } from "./assets/images";
+} from "./assets/sounds/index";
+import { appleImage } from "./assets/images/index";
 import { getRandomIntInclusive } from "./utils";
 import Input from "./input";
 import {

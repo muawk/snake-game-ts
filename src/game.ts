@@ -25,11 +25,12 @@ import {
 
 class SnakeGame {
   private ctx: CanvasRenderingContext2D;
-  private snake = INITIAL_SNAKE;
-  private food = INITIAL_FOOD_POSITION;
+  private snake = [...INITIAL_SNAKE];
+  private food = { ...INITIAL_FOOD_POSITION };
   private direction: Direction = "right";
   private startTimeMs: number = performance.now();
-  private updateIntervals: number = 0;
+  // accumulator for fixed-timestep updates (ms)
+  private accumulatorMs: number = 0;
   private input: Input;
   private speedInMs: number = INITIAL_SPEED;
   private gameState: GameState = "NotStarted";
@@ -59,57 +60,52 @@ class SnakeGame {
   }
 
   private loop = (timestampInMs: number) => {
-    this.handleUserInput();
+    // handle non-directional input (start/restart)
+    if (this.input.isKeyPressed("Space") && this.gameState === "NotStarted") {
+      this.sounds.gameStart.play();
+      this.gameState = "Started";
+      // clear queued directions on start to avoid unexpected immediate turns
+      this.input.clearQueue();
+    }
+
     if (this.gameState === "Over") return;
 
     const deltaInMs = timestampInMs - this.startTimeMs;
-
     this.startTimeMs = timestampInMs;
 
-    // const fps = 1000 / deltaInMs;
-    this.update(deltaInMs);
+    // accumulate time and run fixed ticks (one movement per tick)
+    this.accumulatorMs += deltaInMs;
+    while (this.accumulatorMs >= this.speedInMs) {
+      this.accumulatorMs -= this.speedInMs;
+      this.updateTick(); // single movement/update tick
+    }
+
     this.render();
     requestAnimationFrame(this.loop);
   };
 
-  private handleUserInput = () => {
-    if (this.input.isKeyPressed("Space") && this.gameState === "NotStarted") {
-      this.sounds.gameStart.play();
-      this.gameState = "Started";
-    } else if (
-      this.input.isKeyPressed("ArrowUp") &&
-      this.direction !== "down"
-    ) {
-      this.sounds.swoosh.play();
-      this.direction = "up";
-    } else if (
-      this.input.isKeyPressed("ArrowDown") &&
-      this.direction !== "up"
-    ) {
-      this.sounds.swoosh.play();
-      this.direction = "down";
-    } else if (
-      this.input.isKeyPressed("ArrowLeft") &&
-      this.direction !== "right"
-    ) {
-      this.sounds.swoosh.play();
-      this.direction = "left";
-    } else if (
-      this.input.isKeyPressed("ArrowRight") &&
-      this.direction !== "left"
-    ) {
-      this.sounds.swoosh.play();
-      this.direction = "right";
-    }
-  };
+  // helper: ignore opposite direction changes
+  private isOpposite(dirA: Direction, dirB: Direction) {
+    return (
+      (dirA === "up" && dirB === "down") ||
+      (dirA === "down" && dirB === "up") ||
+      (dirA === "left" && dirB === "right") ||
+      (dirA === "right" && dirB === "left")
+    );
+  }
 
-  private update = (deltaInMs: number) => {
+  // perform a single movement tick — consumes at most one buffered direction
+  private updateTick = () => {
     if (this.gameState !== "Started") return;
-    this.updateIntervals += deltaInMs;
-    if (this.updateIntervals < this.speedInMs) return;
-    this.updateIntervals = 0;
-    // Let's move the snake
-    // Find the head first
+
+    // consume one buffered direction, validate it
+    const nextDir = this.input.getNextDirection();
+    if (nextDir && !this.isOpposite(nextDir, this.direction)) {
+      this.sounds.swoosh.play();
+      this.direction = nextDir;
+    }
+
+    // Move the snake one unit
     const head = this.snake[0]!;
     const newHead = { ...head };
     switch (this.direction) {
@@ -126,6 +122,7 @@ class SnakeGame {
         newHead.x += UNIT;
         break;
     }
+
     if (this.isGameOver(newHead)) {
       this.gameState = "Over";
       this.sounds.explode.play();
@@ -180,7 +177,10 @@ class SnakeGame {
     const numberOfCols = this.ctx.canvas.height / UNIT;
     for (let x = 0; x < numberOfRows; x++) {
       for (let y = 0; y < numberOfCols; y++) {
-        this.ctx.strokeStyle = Colors.Grid;
+        this.ctx.strokeStyle = Colors.GridOutline;
+        this.ctx.fillStyle =
+          (x + y) % 2 === 0 ? Colors.GridEven : Colors.GridOdd;
+        this.ctx.fillRect(x * UNIT, y * UNIT, UNIT, UNIT);
         this.ctx.strokeRect(x * UNIT, y * UNIT, UNIT, UNIT);
       }
     }
@@ -189,22 +189,59 @@ class SnakeGame {
     this.ctx.textAlign = "right";
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(
-      `Level : ${this.level} | Score: ${this.score}`,
+      `Level: ${this.level} | Score: ${this.score}`,
       this.ctx.canvas.width - 10,
       15
     );
+  };
+
+  // add two eyes in which ever direction the snake is moving
+  private renderEyes = () => {
+    const head = this.snake[0]!;
+    const eyeOffsetX = UNIT / 5;
+    const eyeOffsetY = UNIT / 5;
+    const eyeSize = UNIT / 5;
+
+    let leftEyeX = head.x + eyeOffsetX;
+    let leftEyeY = head.y + eyeOffsetY;
+    let rightEyeX = head.x + UNIT - eyeOffsetX - eyeSize;
+    let rightEyeY = head.y + eyeOffsetY;
+
+    if (this.direction === "down") {
+      leftEyeY = head.y + UNIT - eyeOffsetY - eyeSize;
+      rightEyeY = head.y + UNIT - eyeOffsetY - eyeSize;
+    } else if (this.direction === "left") {
+      leftEyeX = head.x + eyeOffsetX;
+      rightEyeX = head.x + eyeOffsetX;
+      leftEyeY = head.y + UNIT - eyeOffsetY - eyeSize;
+      rightEyeY = head.y + eyeOffsetY;
+    } else if (this.direction === "right") {
+      leftEyeX = head.x + UNIT - eyeOffsetX - eyeSize;
+      rightEyeX = head.x + UNIT - eyeOffsetX - eyeSize;
+      leftEyeY = head.y + eyeOffsetY;
+      rightEyeY = head.y + UNIT - eyeOffsetY - eyeSize;
+    }
+
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(leftEyeX, leftEyeY, eyeSize, eyeSize);
+    this.ctx.fillRect(rightEyeX, rightEyeY, eyeSize, eyeSize);
   };
 
   private renderSnake = () => {
     this.snake.forEach((snakePart, index) => {
       // Draw the snake body
       this.ctx.fillStyle = `rgb(${Colors.Snake.r}, ${
-        Colors.Snake.g + index * 10
+        Colors.Snake.g - index * 10
       }, ${Colors.Snake.b})`;
       this.ctx.fillRect(snakePart.x, snakePart.y, UNIT, UNIT);
       // Draw the snake body outline
       this.ctx.strokeStyle = Colors.SnakeOutline;
       this.ctx.strokeRect(snakePart.x, snakePart.y, UNIT, UNIT);
+
+      if (index === 0) {
+        this.renderEyes();
+        return;
+      }
     });
   };
 

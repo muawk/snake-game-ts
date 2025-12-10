@@ -1,8 +1,10 @@
 export const UNIT = 25;
 export const Colors = {
   Background: "black",
-  Grid: "rgba(255,255,255,.1)",
-  Snake: { r: 0, g: 100, b: 0 },
+  GridOutline: "#c29558",
+  GridEven: "#ddae7f",
+  GridOdd: "#c89a5a",
+  Snake: { r: 0, g: 255, b: 0 },
   SnakeOutline: "rgba(255,255,255,.25)",
   Food: "red",
   OverlayBackground: "rgba(122, 122, 122, .5)",
